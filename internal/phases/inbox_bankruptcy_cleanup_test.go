@@ -19,9 +19,9 @@ func TestOptionalOldMailArchive_ExpectedOutputs(t *testing.T) {
 			name:       "archive_enabled",
 			archiveOld: "yes",
 			messages: []*fakeMessage{
-				{ID: "o1", Headers: map[string]string{"From": "a@example.com"}, Labels: labels("INBOX"), OlderThan3Months: true},
-				{ID: "o2", Headers: map[string]string{"From": "b@example.com"}, Labels: labels("INBOX"), OlderThan3Months: true},
-				{ID: "n1", Headers: map[string]string{"From": "c@example.com"}, Labels: labels("INBOX"), OlderThan3Months: false},
+				{ID: "o1", Headers: map[string]string{"From": "a@example.com"}, Labels: labels("INBOX"), OlderThanLookbackDays: true},
+				{ID: "o2", Headers: map[string]string{"From": "b@example.com"}, Labels: labels("INBOX"), OlderThanLookbackDays: true},
+				{ID: "n1", Headers: map[string]string{"From": "c@example.com"}, Labels: labels("INBOX"), OlderThanLookbackDays: false},
 			},
 			messageIDs: []string{"o1", "o2", "n1"},
 			wantLabels: map[string][]string{
@@ -34,7 +34,7 @@ func TestOptionalOldMailArchive_ExpectedOutputs(t *testing.T) {
 			name:       "archive_disabled",
 			archiveOld: "no",
 			messages: []*fakeMessage{
-				{ID: "o1", Headers: map[string]string{"From": "a@example.com"}, Labels: labels("INBOX"), OlderThan3Months: true},
+				{ID: "o1", Headers: map[string]string{"From": "a@example.com"}, Labels: labels("INBOX"), OlderThanLookbackDays: true},
 			},
 			messageIDs: []string{"o1"},
 			wantLabels: map[string][]string{"o1": {"INBOX"}},

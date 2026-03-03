@@ -298,10 +298,10 @@ func TestDomainTriage_Histogram_ExpectedOutputs(t *testing.T) {
 			wantLineDomains: []string{"alpha", "beta"},
 		},
 		{
-			name: "last_three_months_only",
+			name: "last_lookback_window_only",
 			messages: []*fakeMessage{
-				{ID: "n1", Headers: map[string]string{"From": "a@recent.com"}, Labels: labels("INBOX", "UNREAD"), OlderThan3Months: false},
-				{ID: "o1", Headers: map[string]string{"From": "b@old.com"}, Labels: labels("INBOX", "UNREAD"), OlderThan3Months: true},
+				{ID: "n1", Headers: map[string]string{"From": "a@recent.com"}, Labels: labels("INBOX", "UNREAD"), OlderThanLookbackDays: false},
+				{ID: "o1", Headers: map[string]string{"From": "b@old.com"}, Labels: labels("INBOX", "UNREAD"), OlderThanLookbackDays: true},
 			},
 			wantLineDomains: []string{"recent"},
 		},

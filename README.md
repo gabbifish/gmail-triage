@@ -6,7 +6,7 @@ This project provides an interactive Gmail triage tool that matches your workflo
 2. Auto-label obvious categories:
    - Political mail (detect common FEC disclosure phrases) and archive by removing `INBOX`.
    - Google Calendar reminders and archive by removing `INBOX`.
-3. For remaining unread inbox-only mail in the last 3 months:
+3. For remaining unread inbox-only mail in the `--lookback_days` window:
    - Build a sender-domain histogram.
    - For each domain, choose to:
      - Label + archive existing mail and create a future Gmail filter.
@@ -16,7 +16,7 @@ This project provides an interactive Gmail triage tool that matches your workflo
    - During review, show the latest subject as context for each domain/sender prompt.
    - Queue selected actions first, then apply them with a phase-3 execution progress indicator.
    - Quit early at any point for long-tail domains.
-4. Optionally archive inbox mail older than 3 months.
+4. Optionally archive inbox mail older than `--lookback_days`.
 
 ## Notes About Scope and Safety
 

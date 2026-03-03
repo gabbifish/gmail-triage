@@ -16,13 +16,13 @@ import (
 )
 
 type FakeMessage struct {
-	ID               string
-	Snippet          string
-	Headers          map[string]string
-	Attachments      []string
-	Labels           map[string]bool
-	OlderThan3Months bool
-	AgeDays          int
+	ID                    string
+	Snippet               string
+	Headers               map[string]string
+	Attachments           []string
+	Labels                map[string]bool
+	OlderThanLookbackDays bool
+	AgeDays               int
 }
 
 type listCall struct {
@@ -303,7 +303,7 @@ func messageAgeDays(msg *FakeMessage) int {
 	if msg.AgeDays > 0 {
 		return msg.AgeDays
 	}
-	if msg.OlderThan3Months {
+	if msg.OlderThanLookbackDays {
 		return 120
 	}
 	return 1

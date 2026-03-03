@@ -51,7 +51,7 @@ func main() {
 		domainLimit     = flag.Int("domain_limit", 0, "Optional max number of domains to walk interactively. 0 means all.")
 		nonInteractive  = flag.Bool("non_interactive", false, "Run without prompts.")
 		domainAction    = flag.String("domain_action", "ask", "Action for each domain: ask|label|unsubscribe|skip.")
-		archiveOld      = flag.String("archive_old", "ask", "Older-than-3-month inbox archive behavior: ask|yes|no.")
+		archiveOld      = flag.String("archive_old", "ask", "Older-than-lookback-days inbox archive behavior: ask|yes|no.")
 		startPhase      = flag.Int("start_phase", phaseKnownDefaultRules, "Phase to start from: 1, 2, or 3.")
 		scanWorkers     = flag.Int("scan_workers", 12, "Number of concurrent workers (1-25) for unread triage metadata fetch.")
 		metadataCache   = flag.String("metadata_cache", ".gmailtriage_metadata_cache.json", "Path to local metadata cache file for unread triage.")
@@ -278,6 +278,7 @@ func (a *app) optionalOldMailArchive(ctx context.Context) error {
 	runner := &phases.Phase4Runner{
 		ArchiveOldPolicy: a.archiveOldPolicy,
 		NonInteractive:   a.nonInteractive,
+		LookbackDays:     a.lookbackDays,
 		Client:           a.gmailClient,
 		PromptChoice:     a.promptChoice,
 	}

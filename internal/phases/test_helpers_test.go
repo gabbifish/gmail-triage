@@ -100,6 +100,7 @@ func (h *harness) phase4Runner() *Phase4Runner {
 	return &Phase4Runner{
 		ArchiveOldPolicy: h.archiveOldPolicy,
 		NonInteractive:   h.nonInteractive,
+		LookbackDays:     h.lookbackDays,
 		Client:           client,
 		PromptChoice:     h.promptChoice,
 	}
