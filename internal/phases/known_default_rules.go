@@ -15,6 +15,9 @@ type Phase2Runner struct {
 	Client *gmailclient.Client
 }
 
+// Run executes phase 1 known-rule classification for unread inbox mail in the lookback window.
+// It applies political and calendar rules to current unread inbox mail, then creates future-mail
+// filters where political mail is archived and calendar mail is label-only.
 func (r *Phase2Runner) Run(ctx context.Context) error {
 	if r.Client == nil {
 		return fmt.Errorf("phase 2 runner missing gmail client")
@@ -40,7 +43,7 @@ func (r *Phase2Runner) handlePolitical(ctx context.Context) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	if err := r.applyRule(ctx, politicalIDs, PoliticalLabelName, "political mail", PoliticalFilterQuery); err != nil {
+	if err := r.applyRule(ctx, politicalIDs, PoliticalLabelName, "political mail", PoliticalFilterQuery, true); err != nil {
 		return 0, err
 	}
 	return len(politicalIDs), nil
@@ -52,13 +55,13 @@ func (r *Phase2Runner) handleCalendar(ctx context.Context) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	if err := r.applyRule(ctx, calendarIDs, CalendarLabelName, "calendar invites", CalendarAttachmentFilterQuery); err != nil {
+	if err := r.applyRule(ctx, calendarIDs, CalendarLabelName, "calendar invites", CalendarAttachmentFilterQuery, false); err != nil {
 		return 0, err
 	}
 	return len(calendarIDs), nil
 }
 
-func (r *Phase2Runner) applyRule(ctx context.Context, ids []string, labelName, filterTarget, filterQuery string) error {
+func (r *Phase2Runner) applyRule(ctx context.Context, ids []string, labelName, filterTarget, filterQuery string, archiveFuture bool) error {
 	if len(ids) == 0 {
 		return nil
 	}
@@ -71,7 +74,7 @@ func (r *Phase2Runner) applyRule(ctx context.Context, ids []string, labelName, f
 	if err := r.Client.BatchModify(ctx, ids, []string{labelID}, []string{"INBOX"}); err != nil {
 		return err
 	}
-	if err := r.Client.EnsureFutureFilter(ctx, filterTarget, &gmail.FilterCriteria{Query: filterQuery}, labelID); err != nil {
+	if err := r.Client.EnsureFutureFilter(ctx, filterTarget, &gmail.FilterCriteria{Query: filterQuery}, labelID, archiveFuture); err != nil {
 		return err
 	}
 	return nil

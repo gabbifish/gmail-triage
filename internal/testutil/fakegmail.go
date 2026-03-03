@@ -79,6 +79,9 @@ var (
 	newerThanMonthPattern = regexp.MustCompile(`newer_than:(\d+)m`)
 )
 
+// NewFakeGmailAPI starts a local fake Gmail HTTP API seeded with msgs.
+// Tests can pass the returned client/endpoint into Gmail service construction to run
+// triage flows without network calls or real mailbox side effects.
 func NewFakeGmailAPI(t testing.TB, msgs []*FakeMessage) *FakeGmailAPI {
 	t.Helper()
 	f := &FakeGmailAPI{
@@ -100,24 +103,29 @@ func NewFakeGmailAPI(t testing.TB, msgs []*FakeMessage) *FakeGmailAPI {
 	return f
 }
 
+// Close stops the fake server and releases its listener resources.
 func (f *FakeGmailAPI) Close() {
 	f.server.Close()
 }
 
+// Client returns an HTTP client configured to call only this fake server.
 func (f *FakeGmailAPI) Client() *http.Client {
 	return f.server.Client()
 }
 
+// Endpoint returns the fake server base URL for direct endpoint wiring.
 func (f *FakeGmailAPI) Endpoint() string {
 	return f.server.URL
 }
 
+// PutLabel inserts or replaces a label name->id mapping in fake label storage.
 func (f *FakeGmailAPI) PutLabel(name, id string) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.labelsByName[name] = id
 }
 
+// SetMessageHeader sets or updates a message header on the given fake message ID.
 func (f *FakeGmailAPI) SetMessageHeader(id, key, value string) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -147,6 +155,7 @@ func cloneLabels(in map[string]bool) map[string]bool {
 	return out
 }
 
+// Labels builds the label set representation used by FakeMessage fixtures.
 func Labels(ids ...string) map[string]bool {
 	out := map[string]bool{}
 	for _, id := range ids {
@@ -527,6 +536,8 @@ func (f *FakeGmailAPI) reverseLabelMapLocked() map[string]string {
 	return reverse
 }
 
+// MessageLabelNames returns current human-readable label names for each requested message.
+// This is primarily used by tests to assert final mailbox state after triage actions.
 func (f *FakeGmailAPI) MessageLabelNames(ids ...string) map[string][]string {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -549,12 +560,14 @@ func (f *FakeGmailAPI) MessageLabelNames(ids ...string) map[string][]string {
 	return out
 }
 
+// GetCallCount returns how many message-get calls were issued to the fake API.
 func (f *FakeGmailAPI) GetCallCount() int {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	return len(f.getCalls)
 }
 
+// GetFormats returns requested message-get formats, useful for asserting metadata-only reads.
 func (f *FakeGmailAPI) GetFormats() []string {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -566,6 +579,7 @@ func (f *FakeGmailAPI) GetFormats() []string {
 	return out
 }
 
+// UnsubscribeHits returns unsubscribe endpoint paths hit during a test run.
 func (f *FakeGmailAPI) UnsubscribeHits() []string {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -574,6 +588,7 @@ func (f *FakeGmailAPI) UnsubscribeHits() []string {
 	return out
 }
 
+// FilterCallsView returns normalized filter-create calls for stable test assertions.
 func (f *FakeGmailAPI) FilterCallsView() []FilterCallView {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -602,6 +617,7 @@ func (f *FakeGmailAPI) FilterCallsView() []FilterCallView {
 	return out
 }
 
+// BatchCallsView returns normalized batch-modify calls for stable test assertions.
 func (f *FakeGmailAPI) BatchCallsView() []BatchCallView {
 	f.mu.Lock()
 	defer f.mu.Unlock()

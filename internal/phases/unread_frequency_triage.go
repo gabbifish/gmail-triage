@@ -75,6 +75,9 @@ type phase3FetchResult struct {
 	Err   error
 }
 
+// Run executes phase 2 unread-domain triage for messages in the lookback window.
+// It scans unread inbox-only mail, builds domain buckets, collects selected user actions,
+// then applies label/filter/unsubscribe/archive operations according to those selections.
 func (r *Phase3Runner) Run(ctx context.Context, domainLimit int) error {
 	if err := r.validate(); err != nil {
 		return err
@@ -362,7 +365,7 @@ func (r *Phase3Runner) labelAndArchiveDomain(ctx context.Context, bucket *domain
 	}
 	fmt.Printf("Applied label %q and removed INBOX from %d existing messages.\n", labelName, len(bucket.MessageIDs))
 
-	if err := r.Client.EnsureFutureFilter(ctx, "domain "+bucket.Domain, &gmail.FilterCriteria{Query: "from:" + bucket.Domain}, labelID); err != nil {
+	if err := r.Client.EnsureFutureFilter(ctx, "domain "+bucket.Domain, &gmail.FilterCriteria{Query: "from:" + bucket.Domain}, labelID, true); err != nil {
 		return err
 	}
 	return nil

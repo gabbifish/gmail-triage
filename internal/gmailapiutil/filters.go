@@ -8,12 +8,21 @@ import (
 	"google.golang.org/api/gmail/v1"
 )
 
-func EnsureFutureFilter(ctx context.Context, svc *gmail.Service, dryRun bool, filterTarget string, criteria *gmail.FilterCriteria, labelID string) error {
+// EnsureFutureFilter creates a Gmail filter for future matching messages.
+// It always applies labelID and optionally removes INBOX when archive is true.
+// In dry-run mode it prints the filter payload without calling the API, and it treats
+// "already exists" responses as non-fatal so repeated runs remain idempotent.
+func EnsureFutureFilter(ctx context.Context, svc *gmail.Service, dryRun bool, filterTarget string, criteria *gmail.FilterCriteria, labelID string, archive bool) error {
+	removeLabels := []string{}
+	if archive {
+		removeLabels = []string{"INBOX"}
+	}
+
 	filter := &gmail.Filter{
 		Criteria: criteria,
 		Action: &gmail.FilterAction{
 			AddLabelIds:    []string{labelID},
-			RemoveLabelIds: []string{"INBOX"},
+			RemoveLabelIds: removeLabels,
 		},
 	}
 	if dryRun {

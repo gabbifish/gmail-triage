@@ -16,6 +16,9 @@ type Phase4Runner struct {
 	PromptChoice func(prompt, defaultChoice string, valid map[string]struct{}) string
 }
 
+// Run executes phase 3 cleanup by optionally archiving inbox mail older than lookback days.
+// It supports non-interactive policy modes and, when confirmed, removes INBOX from all
+// matching messages to perform bulk archive behavior.
 func (r *Phase4Runner) Run(ctx context.Context) error {
 	if r.Client == nil {
 		return fmt.Errorf("phase 4 runner missing gmail client")

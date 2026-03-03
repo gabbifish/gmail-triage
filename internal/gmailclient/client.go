@@ -22,6 +22,8 @@ type Client struct {
 	labelCache map[string]string
 }
 
+// New constructs a Gmail API wrapper used by triage phases.
+// The wrapper centralizes dry-run behavior and optional label-name/id cache reuse.
 func New(svc *gmail.Service, opts Options) *Client {
 	cache := opts.LabelCache
 	if cache == nil {
@@ -34,10 +36,13 @@ func New(svc *gmail.Service, opts Options) *Client {
 	}
 }
 
+// Service exposes the underlying Gmail service for APIs not wrapped by Client helpers.
 func (c *Client) Service() *gmail.Service {
 	return c.svc
 }
 
+// ListMessageIDs returns IDs for messages matching query and optional required labels.
+// It paginates through Gmail list responses and stops early when max > 0 and reached.
 func (c *Client) ListMessageIDs(ctx context.Context, query string, labelIDs []string, max int) ([]string, error) {
 	var ids []string
 	call := c.svc.Users.Messages.List("me").Q(query).MaxResults(500).Context(ctx)
@@ -64,6 +69,8 @@ func (c *Client) ListMessageIDs(ctx context.Context, query string, labelIDs []st
 	return ids, nil
 }
 
+// GetMetadata fetches a single message in metadata format.
+// When headers is provided, Gmail only returns those header names to reduce payload size.
 func (c *Client) GetMetadata(ctx context.Context, id string, headers []string) (*gmail.Message, error) {
 	call := c.svc.Users.Messages.Get("me", id).Format("metadata").Context(ctx)
 	if len(headers) > 0 {
@@ -76,6 +83,8 @@ func (c *Client) GetMetadata(ctx context.Context, id string, headers []string) (
 	return msg, nil
 }
 
+// LookupLabelID returns the Gmail label ID for labelName when present.
+// It refreshes the local cache from Gmail if the label is not already cached.
 func (c *Client) LookupLabelID(ctx context.Context, labelName string) (string, error) {
 	if id, ok := c.labelCache[labelName]; ok {
 		return id, nil
@@ -86,6 +95,8 @@ func (c *Client) LookupLabelID(ctx context.Context, labelName string) (string, e
 	return c.labelCache[labelName], nil
 }
 
+// EnsureLabel returns a stable label ID for labelName, creating the label if missing.
+// In dry-run mode it returns a synthetic ID and logs the intended create action.
 func (c *Client) EnsureLabel(ctx context.Context, labelName string) (string, error) {
 	if id, ok := c.labelCache[labelName]; ok {
 		return id, nil
@@ -119,6 +130,8 @@ func (c *Client) EnsureLabel(ctx context.Context, labelName string) (string, err
 	return newLabel.Id, nil
 }
 
+// BatchModify adds/removes labels on the provided message IDs.
+// It chunks requests to Gmail batch limits and logs intended modifications in dry-run mode.
 func (c *Client) BatchModify(ctx context.Context, ids, add, remove []string) error {
 	if len(ids) == 0 {
 		return nil
@@ -148,8 +161,10 @@ func (c *Client) BatchModify(ctx context.Context, ids, add, remove []string) err
 	return nil
 }
 
-func (c *Client) EnsureFutureFilter(ctx context.Context, filterTarget string, criteria *gmail.FilterCriteria, labelID string) error {
-	return gmailapiutil.EnsureFutureFilter(ctx, c.svc, c.dryRun, filterTarget, criteria, labelID)
+// EnsureFutureFilter creates a future-mail filter using this client's dry-run setting.
+// The filter always applies labelID, and it removes INBOX when archive is true.
+func (c *Client) EnsureFutureFilter(ctx context.Context, filterTarget string, criteria *gmail.FilterCriteria, labelID string, archive bool) error {
+	return gmailapiutil.EnsureFutureFilter(ctx, c.svc, c.dryRun, filterTarget, criteria, labelID, archive)
 }
 
 func (c *Client) hydrateLabelCache(ctx context.Context) error {

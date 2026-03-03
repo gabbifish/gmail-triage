@@ -33,7 +33,7 @@ func TestAutoLabelCategories_ExpectedOutputs(t *testing.T) {
 			wantFormat: []string{},
 			wantFilters: []filterCallView{
 				{Query: PoliticalFilterQuery, AddLabels: []string{"Auto/Political"}, RemoveLabels: []string{"INBOX"}},
-				{Query: CalendarAttachmentFilterQuery, AddLabels: []string{"Auto/Calendar Reminder"}, RemoveLabels: []string{"INBOX"}},
+				{Query: CalendarAttachmentFilterQuery, AddLabels: []string{"Auto/Calendar Reminder"}, RemoveLabels: []string{}},
 			},
 		},
 		{
