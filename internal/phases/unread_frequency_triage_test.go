@@ -123,7 +123,7 @@ func TestDomainTriage_Unsubscribe_ExpectedOutputs(t *testing.T) {
 	wantHits := []string{"/unsubscribe/one", "/unsubscribe/two"}
 	assertEqual(t, "unsubscribe endpoint hits", fake.UnsubscribeHits(), wantHits)
 	assertEqual(t, "unsubscribe archives inbox messages", fake.BatchCallsView(), []batchCallView{{
-		IDs:          []string{"u4", "u5"},
+		IDs:          []string{"u1", "u2", "u3", "u4", "u5"},
 		AddLabels:    []string{},
 		RemoveLabels: []string{"INBOX"},
 	}})
@@ -183,7 +183,7 @@ func TestDomainTriage_GranularSenderUnsubscribe_ExpectedOutputs(t *testing.T) {
 
 	assertEqual(t, "unsubscribe endpoint hits", fake.UnsubscribeHits(), []string{"/unsubscribe/one"})
 	assertEqual(t, "sender-level unsubscribe archives only selected sender", fake.BatchCallsView(), []batchCallView{{
-		IDs:          []string{"g4", "g5"},
+		IDs:          []string{"g1", "g2", "g4", "g5"},
 		AddLabels:    []string{},
 		RemoveLabels: []string{"INBOX"},
 	}})
