@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gmail Triage"
+  short_description: "Automate Gmail labeling, triage, and archive workflows"
+  default_prompt: "Use $gmail-triage to run a safe dry run and summarize detections and actions."
