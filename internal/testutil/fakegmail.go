@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -21,6 +22,7 @@ type FakeMessage struct {
 	Attachments      []string
 	Labels           map[string]bool
 	OlderThan3Months bool
+	AgeDays          int
 }
 
 type listCall struct {
@@ -69,6 +71,13 @@ type FilterCallView struct {
 	AddLabels    []string
 	RemoveLabels []string
 }
+
+var (
+	olderThanDaysPattern  = regexp.MustCompile(`older_than:(\d+)d`)
+	olderThanMonthPattern = regexp.MustCompile(`older_than:(\d+)m`)
+	newerThanDaysPattern  = regexp.MustCompile(`newer_than:(\d+)d`)
+	newerThanMonthPattern = regexp.MustCompile(`newer_than:(\d+)m`)
+)
 
 func NewFakeGmailAPI(t testing.TB, msgs []*FakeMessage) *FakeGmailAPI {
 	t.Helper()
@@ -224,10 +233,7 @@ func matchesQuery(msg *FakeMessage, q string, labelIDs []string) bool {
 	if strings.Contains(q, "is:unread") && !msg.Labels["UNREAD"] {
 		return false
 	}
-	if strings.Contains(q, "older_than:3m") && !msg.OlderThan3Months {
-		return false
-	}
-	if strings.Contains(q, "newer_than:") && msg.OlderThan3Months {
+	if !matchesAgeQuery(msg, q) {
 		return false
 	}
 	if strings.Contains(q, "has:attachment") && len(msg.Attachments) == 0 {
@@ -273,6 +279,46 @@ func matchesQuery(msg *FakeMessage, q string, labelIDs []string) bool {
 		}
 	}
 	return true
+}
+
+func matchesAgeQuery(msg *FakeMessage, query string) bool {
+	ageDays := messageAgeDays(msg)
+
+	if olderThanDays, ok := findAgeValue(query, olderThanDaysPattern); ok && ageDays <= olderThanDays {
+		return false
+	}
+	if olderThanMonths, ok := findAgeValue(query, olderThanMonthPattern); ok && ageDays <= olderThanMonths*30 {
+		return false
+	}
+	if newerThanDays, ok := findAgeValue(query, newerThanDaysPattern); ok && ageDays > newerThanDays {
+		return false
+	}
+	if newerThanMonths, ok := findAgeValue(query, newerThanMonthPattern); ok && ageDays > newerThanMonths*30 {
+		return false
+	}
+	return true
+}
+
+func messageAgeDays(msg *FakeMessage) int {
+	if msg.AgeDays > 0 {
+		return msg.AgeDays
+	}
+	if msg.OlderThan3Months {
+		return 120
+	}
+	return 1
+}
+
+func findAgeValue(query string, pattern *regexp.Regexp) (int, bool) {
+	matches := pattern.FindStringSubmatch(query)
+	if len(matches) != 2 {
+		return 0, false
+	}
+	n, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return 0, false
+	}
+	return n, true
 }
 
 func containsAny(text string, needles []string) bool {

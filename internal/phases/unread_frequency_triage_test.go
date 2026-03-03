@@ -101,9 +101,11 @@ func TestDomainTriage_LabelAndFilter_ExpectedOutputs(t *testing.T) {
 
 func TestDomainTriage_Unsubscribe_ExpectedOutputs(t *testing.T) {
 	fake := testutil.NewFakeGmailAPI(t, []*fakeMessage{
-		{ID: "u1", Headers: map[string]string{"From": "one@example.com", "List-Unsubscribe": "<https://no-op.invalid>"}, Labels: labels("INBOX", "UNREAD")},
-		{ID: "u2", Headers: map[string]string{"From": "two@example.com"}, Labels: labels("INBOX", "UNREAD")},
-		{ID: "u3", Headers: map[string]string{"From": "two@example.com"}, Labels: labels("INBOX", "UNREAD")},
+		{ID: "u1", Headers: map[string]string{"From": "one@example.com", "List-Unsubscribe": "<https://no-op.invalid>"}, Labels: labels("INBOX", "UNREAD"), AgeDays: 5},
+		{ID: "u2", Headers: map[string]string{"From": "two@example.com"}, Labels: labels("INBOX", "UNREAD"), AgeDays: 4},
+		{ID: "u3", Headers: map[string]string{"From": "two@example.com"}, Labels: labels("INBOX", "UNREAD"), AgeDays: 3},
+		{ID: "u4", Headers: map[string]string{"From": "one@example.com"}, Labels: labels("INBOX"), AgeDays: 120},
+		{ID: "u5", Headers: map[string]string{"From": "two@example.com"}, Labels: labels("INBOX"), AgeDays: 150},
 	})
 	defer fake.Close()
 
@@ -121,7 +123,7 @@ func TestDomainTriage_Unsubscribe_ExpectedOutputs(t *testing.T) {
 	wantHits := []string{"/unsubscribe/one", "/unsubscribe/two"}
 	assertEqual(t, "unsubscribe endpoint hits", fake.UnsubscribeHits(), wantHits)
 	assertEqual(t, "unsubscribe archives inbox messages", fake.BatchCallsView(), []batchCallView{{
-		IDs:          []string{"u1", "u2", "u3"},
+		IDs:          []string{"u4", "u5"},
 		AddLabels:    []string{},
 		RemoveLabels: []string{"INBOX"},
 	}})
@@ -129,7 +131,8 @@ func TestDomainTriage_Unsubscribe_ExpectedOutputs(t *testing.T) {
 
 func TestDomainTriage_Unsubscribe_DryRunDoesNotHitHTTP_ExpectedOutputs(t *testing.T) {
 	fake := testutil.NewFakeGmailAPI(t, []*fakeMessage{
-		{ID: "u1", Headers: map[string]string{"From": "one@example.com"}, Labels: labels("INBOX", "UNREAD")},
+		{ID: "u1", Headers: map[string]string{"From": "one@example.com"}, Labels: labels("INBOX", "UNREAD"), AgeDays: 5},
+		{ID: "u2", Headers: map[string]string{"From": "one@example.com"}, Labels: labels("INBOX"), AgeDays: 130},
 	})
 	defer fake.Close()
 
@@ -158,9 +161,11 @@ func TestDomainTriage_Unsubscribe_DryRunDoesNotHitHTTP_ExpectedOutputs(t *testin
 
 func TestDomainTriage_GranularSenderUnsubscribe_ExpectedOutputs(t *testing.T) {
 	fake := testutil.NewFakeGmailAPI(t, []*fakeMessage{
-		{ID: "g1", Headers: map[string]string{"From": "one@example.com"}, Labels: labels("INBOX", "UNREAD")},
-		{ID: "g2", Headers: map[string]string{"From": "one@example.com"}, Labels: labels("INBOX", "UNREAD")},
-		{ID: "g3", Headers: map[string]string{"From": "two@example.com"}, Labels: labels("INBOX", "UNREAD")},
+		{ID: "g1", Headers: map[string]string{"From": "one@example.com"}, Labels: labels("INBOX", "UNREAD"), AgeDays: 5},
+		{ID: "g2", Headers: map[string]string{"From": "one@example.com"}, Labels: labels("INBOX", "UNREAD"), AgeDays: 4},
+		{ID: "g3", Headers: map[string]string{"From": "two@example.com"}, Labels: labels("INBOX", "UNREAD"), AgeDays: 3},
+		{ID: "g4", Headers: map[string]string{"From": "one@example.com"}, Labels: labels("INBOX"), AgeDays: 150},
+		{ID: "g5", Headers: map[string]string{"From": "one@example.com"}, Labels: labels("INBOX"), AgeDays: 180},
 	})
 	defer fake.Close()
 
@@ -178,7 +183,7 @@ func TestDomainTriage_GranularSenderUnsubscribe_ExpectedOutputs(t *testing.T) {
 
 	assertEqual(t, "unsubscribe endpoint hits", fake.UnsubscribeHits(), []string{"/unsubscribe/one"})
 	assertEqual(t, "sender-level unsubscribe archives only selected sender", fake.BatchCallsView(), []batchCallView{{
-		IDs:          []string{"g1", "g2"},
+		IDs:          []string{"g4", "g5"},
 		AddLabels:    []string{},
 		RemoveLabels: []string{"INBOX"},
 	}})

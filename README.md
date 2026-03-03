@@ -10,8 +10,8 @@ This project provides an interactive Gmail triage tool that matches your workflo
    - Build a sender-domain histogram.
    - For each domain, choose to:
      - Label + archive existing mail and create a future Gmail filter.
-     - Attempt domain-wide unsubscribe via `List-Unsubscribe` headers and archive inbox mail for that domain.
-     - Choose granular sender-by-sender unsubscribe + archive within a domain.
+     - Attempt domain-wide unsubscribe via `List-Unsubscribe` headers and archive inbox mail older than `--lookback_days` for that domain.
+     - Choose granular sender-by-sender unsubscribe + archive older inbox mail within a domain.
      - Leave as-is.
    - During review, show the latest subject as context for each domain/sender prompt.
    - Queue selected actions first, then apply them with a phase-3 execution progress indicator.
@@ -30,7 +30,7 @@ This project provides an interactive Gmail triage tool that matches your workflo
   - HTTP unsubscribe endpoints are attempted automatically in live runs.
   - In `--dry_run`, HTTP unsubscribe attempts are reported but not executed.
   - `mailto:` unsubscribe links are always reported for manual action.
-  - Unsubscribe actions also archive inbox messages for the selected domain (`INBOX` removed).
+  - Unsubscribe actions archive inbox messages older than `--lookback_days` for the selected domain (`INBOX` removed).
 - Interactive mode includes a granular sender-level unsubscribe+archive option within each domain.
 
 ## Scope-to-Feature Mapping
@@ -81,8 +81,8 @@ Optional flags:
 - `--non_interactive` run with no prompts (automation-safe).
 - `--domain_action ask|label|unsubscribe|skip` default action for each domain in non-interactive mode.
 - `--archive_old ask|yes|no` old-mail archive behavior in non-interactive mode.
-- `--phase3_scan_workers N` number of concurrent metadata workers for phase 3 scan (1-25, default 12).
-- `--phase3_cache PATH` local phase 3 metadata cache file used to skip unchanged message fetches across reruns.
+- `--scan_workers N` number of concurrent metadata workers for unread triage scan (1-25, default 12).
+- `--metadata_cache PATH` local metadata cache file used to skip unchanged message fetches across reruns.
 
 ## OAuth Token Behavior
 

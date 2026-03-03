@@ -32,8 +32,8 @@ type app struct {
 	nonInteractive    bool
 	domainAction      string
 	archiveOldPolicy  string
-	phase3ScanWorkers int
-	phase3CachePath   string
+	scanWorkers       int
+	metadataCachePath string
 }
 
 const (
@@ -53,8 +53,8 @@ func main() {
 		domainAction    = flag.String("domain_action", "ask", "Action for each domain: ask|label|unsubscribe|skip.")
 		archiveOld      = flag.String("archive_old", "ask", "Older-than-3-month inbox archive behavior: ask|yes|no.")
 		startPhase      = flag.Int("start_phase", phaseKnownDefaultRules, "Phase to start from: 1, 2, or 3.")
-		phase3Workers   = flag.Int("phase3_scan_workers", 12, "Number of concurrent workers (1-25) for phase 3 metadata fetch.")
-		phase3CachePath = flag.String("phase3_cache", ".gmailtriage_phase3_cache.json", "Path to local phase 3 metadata cache file.")
+		scanWorkers     = flag.Int("scan_workers", 12, "Number of concurrent workers (1-25) for unread triage metadata fetch.")
+		metadataCache   = flag.String("metadata_cache", ".gmailtriage_metadata_cache.json", "Path to local metadata cache file for unread triage.")
 	)
 	flag.Parse()
 
@@ -70,8 +70,8 @@ func main() {
 	if *startPhase < phaseKnownDefaultRules || *startPhase > phaseInboxCleanup {
 		exitf("start_phase must be one of: 1, 2, 3")
 	}
-	if *phase3Workers < 1 || *phase3Workers > 25 {
-		exitf("phase3_scan_workers must be in range 1-25")
+	if *scanWorkers < 1 || *scanWorkers > 25 {
+		exitf("scan_workers must be in range 1-25")
 	}
 
 	ctx := context.Background()
@@ -96,8 +96,8 @@ func main() {
 		nonInteractive:    *nonInteractive,
 		domainAction:      *domainAction,
 		archiveOldPolicy:  *archiveOld,
-		phase3ScanWorkers: *phase3Workers,
-		phase3CachePath:   *phase3CachePath,
+		scanWorkers:       *scanWorkers,
+		metadataCachePath: *metadataCache,
 	}
 
 	if *startPhase <= phaseKnownDefaultRules {
@@ -265,8 +265,8 @@ func (a *app) domainTriage(ctx context.Context, domainLimit int) error {
 		DryRun:            a.dryRun,
 		NonInteractive:    a.nonInteractive,
 		DomainAction:      a.domainAction,
-		Phase3ScanWorkers: a.phase3ScanWorkers,
-		Phase3CachePath:   a.phase3CachePath,
+		Phase3ScanWorkers: a.scanWorkers,
+		Phase3CachePath:   a.metadataCachePath,
 		HTTPClient:        a.httpClient,
 		Client:            a.gmailClient,
 		PromptChoice:      a.promptChoice,

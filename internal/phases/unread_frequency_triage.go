@@ -520,13 +520,13 @@ func (r *Phase3Runner) archiveSenderInboxMessages(ctx context.Context, senderAdd
 }
 
 func (r *Phase3Runner) archiveInboxMessagesByFromQuery(ctx context.Context, fromTerm, archiveTarget string) error {
-	query := fmt.Sprintf("in:inbox from:%s", fromTerm)
+	query := fmt.Sprintf("in:inbox older_than:%dd from:%s", r.LookbackDays, fromTerm)
 	ids, err := r.Client.ListMessageIDs(ctx, query, []string{"INBOX"}, 0)
 	if err != nil {
 		return fmt.Errorf("list inbox messages for %s: %w", archiveTarget, err)
 	}
 	if len(ids) == 0 {
-		fmt.Printf("No inbox messages found for %s to archive.\n", archiveTarget)
+		fmt.Printf("No inbox messages older than %d days found for %s to archive.\n", r.LookbackDays, archiveTarget)
 		return nil
 	}
 
